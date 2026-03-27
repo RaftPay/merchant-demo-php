@@ -52,10 +52,13 @@ try {
         'amount'          => '100',
         'currency'        => 'PKR',
         'payType'         => 'JAZZCASH',
+        'payerMobile'     => '03001234567',
+        'payerEmail'      => 'test@example.com',
+        'payerName'       => 'Test User',
+        'customerIp'      => '1.2.3.4',
         'notifyUrl'       => $config['notifyUrl'],
         'returnUrl'       => $config['returnUrl'] ?? '',
         'description'     => 'Test deposit',
-        // 'payerMobile'  => '03001234567',  // 选填
     ]);
     if ($result['result'] === 0) {
         $data = $result['data'];
@@ -74,9 +77,44 @@ try {
 echo "\n";
 
 // ============================================================
-// 3. 创建代付订单（手机钱包 MWALLET）
+// 2b. 创建代收订单（直连模式）
 // ============================================================
-echo "========== 3. 创建代付订单 (MWALLET) ==========\n";
+echo "========== 2b. 创建代收订单（直连模式） ==========\n";
+$directOrderNo = 'DEP' . time() . substr(uniqid(), -8) . 'D';
+try {
+    $result = $client->createDeposit([
+        'merchantOrderNo' => $directOrderNo,
+        'amount'          => '100',
+        'currency'        => 'PKR',
+        'payType'         => 'JAZZCASH',
+        'payerMobile'     => '03001234567',
+        'payerEmail'      => 'test@example.com',
+        'payerName'       => 'Test User',
+        'customerIp'      => '1.2.3.4',
+        'notifyUrl'       => $config['notifyUrl'],
+        'returnUrl'       => $config['returnUrl'] ?? '',
+        'description'     => 'Test deposit - direct mode',
+        'directMode'      => 1,
+    ]);
+    if ($result['result'] === 0) {
+        $data = $result['data'];
+        $statusText = $statusMap[$data['status']] ?? '未知';
+        echo "订单创建成功! (直连模式，无收银台链接)\n";
+        echo "平台订单号: {$data['orderId']}\n";
+        echo "商户订单号: {$data['merchantOrderNo']}\n";
+        echo "订单状态:   {$data['status']} ({$statusText})\n";
+    } else {
+        echo "创建失败: {$result['message']} (code: {$result['result']})\n";
+    }
+} catch (Exception $e) {
+    echo "异常: {$e->getMessage()}\n";
+}
+echo "\n";
+
+// ============================================================
+// 4. 创建代付订单（手机钱包 MWALLET）
+// ============================================================
+echo "========== 4. 创建代付订单 (MWALLET) ==========\n";
 $payoutOrderNo = 'WDR' . time() . substr(uniqid(), -8);
 try {
     $result = $client->createPayout([
@@ -88,6 +126,7 @@ try {
         'payerMobile'     => '03001234567',
         'accountNumber'   => '03001234567',
         'accountName'     => 'Test User',
+        'customerIp'      => '1.2.3.4',
         'notifyUrl'       => $config['notifyUrl'],
         'description'     => 'Test payout - wallet',
     ]);
@@ -106,9 +145,9 @@ try {
 echo "\n";
 
 // ============================================================
-// 4. 创建代付订单（银行转账 IBFT）
+// 5. 创建代付订单（银行转账 IBFT）
 // ============================================================
-echo "========== 4. 创建代付订单 (IBFT) ==========\n";
+echo "========== 5. 创建代付订单 (IBFT) ==========\n";
 $ibftOrderNo = 'WDR' . time() . substr(uniqid(), -8) . 'B';
 try {
     $result = $client->createPayout([
@@ -120,6 +159,7 @@ try {
         'accountNumber'   => '1234567890123',
         'accountName'     => 'Test User',
         'bankCode'        => 'HBL',
+        'customerIp'      => '1.2.3.4',
         'notifyUrl'       => $config['notifyUrl'],
         'description'     => 'Test payout - bank transfer',
     ]);
@@ -138,9 +178,9 @@ try {
 echo "\n";
 
 // ============================================================
-// 5. 查询订单状态
+// 6. 查询订单状态
 // ============================================================
-echo "========== 5. 查询订单状态 ==========\n";
+echo "========== 6. 查询订单状态 ==========\n";
 try {
     $result = $client->queryOrderStatus($depositOrderNo);
     if ($result['result'] === 0) {
