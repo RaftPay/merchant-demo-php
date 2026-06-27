@@ -42,48 +42,13 @@ try {
 echo "\n";
 
 // ============================================================
-// 2. 创建代收订单
+// 2. 创建代收订单（推荐直连模式）
 // ============================================================
-echo "========== 2. 创建代收订单 ==========\n";
+echo "========== 2. 创建代收订单（推荐直连模式） ==========\n";
 $depositOrderNo = 'DEP' . time() . substr(uniqid(), -8);
 try {
     $result = $client->createDeposit([
         'merchantOrderNo' => $depositOrderNo,
-        'amount'          => '100',
-        'currency'        => 'PKR',
-        'payType'         => 'JAZZCASH',
-        'payerMobile'     => '03001234567',
-        'payerEmail'      => 'test@example.com',
-        'payerName'       => 'Test User',
-        'customerIp'      => '1.2.3.4',
-        'notifyUrl'       => $config['notifyUrl'],
-        'returnUrl'       => $config['returnUrl'] ?? '',
-        'description'     => 'Test deposit',
-    ]);
-    if ($result['result'] === 0) {
-        $data = $result['data'];
-        echo "订单创建成功!\n";
-        echo "平台订单号: {$data['orderId']}\n";
-        echo "商户订单号: {$data['merchantOrderNo']}\n";
-        echo "收银台链接: {$data['payUrl']}\n";
-        $statusText = $statusMap[$data['status']] ?? '未知';
-        echo "订单状态:   {$data['status']} ({$statusText})\n";
-    } else {
-        echo "创建失败: {$result['message']} (code: {$result['result']})\n";
-    }
-} catch (Exception $e) {
-    echo "异常: {$e->getMessage()}\n";
-}
-echo "\n";
-
-// ============================================================
-// 2b. 创建代收订单（直连模式）
-// ============================================================
-echo "========== 2b. 创建代收订单（直连模式） ==========\n";
-$directOrderNo = 'DEP' . time() . substr(uniqid(), -8) . 'D';
-try {
-    $result = $client->createDeposit([
-        'merchantOrderNo' => $directOrderNo,
         'amount'          => '100',
         'currency'        => 'PKR',
         'payType'         => 'JAZZCASH',
@@ -98,10 +63,46 @@ try {
     ]);
     if ($result['result'] === 0) {
         $data = $result['data'];
-        $statusText = $statusMap[$data['status']] ?? '未知';
-        echo "订单创建成功! (直连模式，无收银台链接)\n";
+        echo "订单创建成功! (推荐直连模式，无收银台链接)\n";
         echo "平台订单号: {$data['orderId']}\n";
         echo "商户订单号: {$data['merchantOrderNo']}\n";
+        $statusText = $statusMap[$data['status']] ?? '未知';
+        echo "订单状态:   {$data['status']} ({$statusText})\n";
+    } else {
+        echo "创建失败: {$result['message']} (code: {$result['result']})\n";
+    }
+} catch (Exception $e) {
+    echo "异常: {$e->getMessage()}\n";
+}
+echo "\n";
+
+// ============================================================
+// 2b. 创建代收订单（收银台模式，可选）
+// ============================================================
+echo "========== 2b. 创建代收订单（收银台模式，可选） ==========\n";
+$cashierOrderNo = 'DEP' . time() . substr(uniqid(), -8) . 'C';
+try {
+    $result = $client->createDeposit([
+        'merchantOrderNo' => $cashierOrderNo,
+        'amount'          => '100',
+        'currency'        => 'PKR',
+        'payType'         => 'JAZZCASH',
+        'payerMobile'     => '03001234567',
+        'payerEmail'      => 'test@example.com',
+        'payerName'       => 'Test User',
+        'customerIp'      => '1.2.3.4',
+        'notifyUrl'       => $config['notifyUrl'],
+        'returnUrl'       => $config['returnUrl'] ?? '',
+        'description'     => 'Test deposit - cashier mode',
+        'directMode'      => 0,
+    ]);
+    if ($result['result'] === 0) {
+        $data = $result['data'];
+        $statusText = $statusMap[$data['status']] ?? '未知';
+        echo "订单创建成功! (收银台模式)\n";
+        echo "平台订单号: {$data['orderId']}\n";
+        echo "商户订单号: {$data['merchantOrderNo']}\n";
+        echo "收银台链接: {$data['payUrl']}\n";
         echo "订单状态:   {$data['status']} ({$statusText})\n";
     } else {
         echo "创建失败: {$result['message']} (code: {$result['result']})\n";
@@ -124,8 +125,6 @@ try {
         'payoutMethod'    => 'MWALLET',
         'payType'         => 'JAZZCASH',
         'payerMobile'     => '03001234567',
-        'accountNumber'   => '03001234567',
-        'accountName'     => 'Test User',
         'customerIp'      => '1.2.3.4',
         'notifyUrl'       => $config['notifyUrl'],
         'description'     => 'Test payout - wallet',
